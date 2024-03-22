@@ -13,13 +13,27 @@
 import argparse
 import cv2
 import numpy as np
+from argparse import Namespace
+from cv2 import VideoCapture
 from numpy.typing import NDArray
 from typing import Tuple
 
 window_params = {'capture_window_name':'Input video',
                 'detection_window_name':'Detected object'}
 
-def parse_cli_data()->argparse:
+def parse_cli_data() -> Namespace:
+    """
+    Parses command line interface data for object detection settings.
+
+    Sets up and processes command line arguments for specifying a video file
+    and frame resize percentage. The video file can be a path to a file or 'camera'
+    to use the default camera. The frame resize percentage scales the video frames
+    for processing.
+
+    Returns:
+        Namespace: Parsed command line arguments with video file path or camera indicator
+        and frame resize percentage.
+    """
     parser = argparse.ArgumentParser(prog='HW6 - Object Detector',
                                     description='Detect a person moving around in the football field',
                                     epilog='JRGM & JCCV - 2024')
@@ -41,15 +55,33 @@ def parse_cli_data()->argparse:
     return args
 
 
-def initialise_camera(args:argparse)->cv2.VideoCapture:
-    
+def initialise_camera(args: Namespace) -> VideoCapture:
+    """
+    Initializes a video capture object with the specified video file or camera.
+
+    Args:
+        args (Namespace): Parsed command line arguments including the video file or camera index.
+
+    Returns:
+        VideoCapture: OpenCV video capture object initialized with the specified video source.
+    """
     # Create a video capture object
     cap = cv2.VideoCapture(args.video_file)
     
     return cap
 
-def rescale_frame(frame:NDArray, percentage:np.intc=20)->NDArray:
-    
+def rescale_frame(frame: NDArray, percentage: int = 20) -> NDArray:
+    """
+    Rescales a video frame to a specified percentage of its original size.
+
+    Args:
+        frame (ndarray): The original video frame to be rescaled.
+        percentage (int, optional): The percentage of the original size to which
+                                    the frame should be resized. Defaults to 20.
+
+    Returns:
+        NDArray: The rescaled video frame.
+    """
     # Resize current frame
     width = int(frame.shape[1] * percentage / 100)
     height = int(frame.shape[0] * percentage / 100)
@@ -57,8 +89,20 @@ def rescale_frame(frame:NDArray, percentage:np.intc=20)->NDArray:
     return frame
 
 
-def segment_object(cap:cv2.VideoCapture, args:argparse)->None:
+def segment_object(cap: VideoCapture, args: Namespace) -> None:
+    """
+    Processes video from a capture device to segment and highlight moving objects.
 
+    Continuously reads frames from the video capture, rescales them, applies median filtering,
+    and uses color segmentation to identify and draw rectangles around detected objects.
+
+    Args:
+        cap (VideoCapture): The video capture object from which frames are read.
+        args (Namespace): Parsed command line arguments including frame resize percentage.
+
+    Returns:
+        None
+    """
     # Main loop
     while cap.isOpened(): 
 
@@ -116,8 +160,16 @@ def segment_object(cap:cv2.VideoCapture, args:argparse)->None:
             break
 
 
-def close_windows(cap:cv2.VideoCapture)->None:
-    
+def close_windows(cap: VideoCapture) -> None:
+    """
+    Closes all OpenCV windows and releases the video capture object.
+
+    Args:
+        cap (VideoCapture): The video capture object to be released.
+
+    Returns:
+        None
+    """
     # Destroy all visualisation windows
     cv2.destroyAllWindows()
 

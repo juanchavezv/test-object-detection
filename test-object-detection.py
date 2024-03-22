@@ -12,7 +12,20 @@
 #Import developed libraries
 import modules.od as od
 
-def run_pipeline()->None:
+def run_pipeline() -> None:
+    """
+    Executes a pipeline to capture video based on CLI arguments, segments objects in the video,
+    and closes all related windows.
+
+    This function performs the following steps:
+    1. Parses command line interface data to get configuration or input parameters.
+    2. Initializes video capture based on the parsed CLI data.
+    3. Segments objects within the captured video stream.
+    4. Closes all open windows that were used during the video capture and processing.
+
+    Returns:
+        None
+    """
     # Get data from CLI
     args = od.parse_cli_data()
 
