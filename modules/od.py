@@ -1,20 +1,20 @@
-""" HW6 - Object segmentation using the HSV image colour space
-    This script is a vision-based object detection algorithm able to detect a person moving around in the football field.
-    
+""" HW6 - Object Detection Module
+    This scripts is a Python module that implements the following functions:
+    parse_cli_data: Parses command-line arguments for video file and frame resize percentage.
+    initialise_camera: Initializes video capture from a camera or a video file.
+    rescale_frame: Rescales a video frame based on a specified percentage.
+    segment_object: Processes video frames to detect and segment objects.
+    close_windows: Closes all OpenCV visualization windows and releases video capture resources.
+
     Authors: Juan Carlos Chávez Villarreal & Jorge Rodrigo Gomez Mayo
     Contact: juan.chavezv@udem.edu & jorger.gomez@udem.edu
     Organization: Universidad de Monterrey
-
-    ** This script was made based on stds-sample-code-for-object-detection.py from Andres Hernandez Gutierrez **
-    USAGE: 
-    $ python stds-sample-code-for-object-detection.py --video_file football-field-cropped-video.mp4 --frame_resize_percentage 30
 """
-# Import standard libraries 
-import cv2 
 import argparse
+import cv2
 import numpy as np
 from numpy.typing import NDArray
-from typing import Dict, Union, List
+from typing import Tuple
 
 window_params = {'capture_window_name':'Input video',
                 'detection_window_name':'Detected object'}
@@ -123,25 +123,3 @@ def close_windows(cap:cv2.VideoCapture)->None:
 
     # Destroy 'VideoCapture' object
     cap.release()
-
-
-def run_pipeline(args:argparse)->None:
-
-    # Initialise video capture
-    cap = initialise_camera(args)
-
-    # Process video
-    segment_object(cap, args)
-
-    # Close all open windows
-    close_windows(cap)
-
-
-
-if __name__=='__main__':
-
-    # Get data from CLI
-    args = parse_cli_data()
-
-    # Run pipeline
-    run_pipeline(args)
