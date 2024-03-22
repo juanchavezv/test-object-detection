@@ -103,6 +103,9 @@ def segment_object(cap: VideoCapture, args: Namespace) -> None:
     Returns:
         None
     """
+    # Rectangle size
+    FIXED_RECTANGLE_SIZE = (args.frame_resize_percentage, args.frame_resize_percentage)
+    
     # Main loop
     while cap.isOpened(): 
 
@@ -118,14 +121,14 @@ def segment_object(cap: VideoCapture, args: Namespace) -> None:
         frame = rescale_frame(frame, args.frame_resize_percentage)
         
         # Apply the median filter
-        frame = cv2.medianBlur(frame,5)
+        filtered_frame = cv2.medianBlur(frame,5)
 
         # Convert the current frame from BGR to HSV
-        frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        frame_HSV = cv2.cvtColor(filtered_frame, cv2.COLOR_BGR2HSV)
 
         # Define the range for black
         lower_black = np.array([70, 0, 0])
-        upper_black = np.array([180, 255, 70])
+        upper_black = np.array([180, 255, 80])
 
         # Define the range for blue
         lower_blue = np.array([110, 50, 50])
@@ -133,30 +136,41 @@ def segment_object(cap: VideoCapture, args: Namespace) -> None:
 
         # Apply a threshold to the HSV image
         mask_black = cv2.inRange(frame_HSV,lower_black,upper_black) 
-        
         mask_blue = cv2.inRange(frame_HSV,lower_blue,upper_blue) 
 
-        # Filter out the grassy region from current frame, but keep the moving object 
-        mask_combined = cv2.bitwise_or(mask_black, mask_blue)
-        bitwise_AND = cv2.bitwise_and(frame, frame, mask=mask_combined)
+        # Combine masks to isolate the object
+        mask_obj = cv2.bitwise_or(mask_black, mask_blue)
 
-        # Find contours in the combined mask
-        contours, _ = cv2.findContours(mask_combined, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Create a copy of frame to make modifications 
+        output_frame = frame.copy()
+
+        # Find contours in the original object mask
+        contours, _ = cv2.findContours(mask_obj, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         if contours:
-            # Assume the largest contour is the person
+            # Assume the largest contour is the object to be negated 
             largest_contour = max(contours, key=cv2.contourArea)
             x, y, w, h = cv2.boundingRect(largest_contour)
-            # Draw a red rectangle around the person
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
 
-        # Visualise both the input video and the object detection windows
+            # Calculate the center of the largest contour
+            center_x, center_y = x + w // 2, y + h // 2
+
+            # Adjust the fixed-size rectangle around the center
+            fixed_x = max(center_x - FIXED_RECTANGLE_SIZE[0] // 2, 0)
+            fixed_y = max(center_y - FIXED_RECTANGLE_SIZE[1] // 2, 0)
+            cv2.rectangle(output_frame, 
+                            (fixed_x, fixed_y), 
+                            (fixed_x + FIXED_RECTANGLE_SIZE[0], fixed_y + FIXED_RECTANGLE_SIZE[1]), 
+                            (0, 0, 255), 2)
+
+
+        # Visualise both the input video and the modified detection window
         cv2.imshow(window_params['capture_window_name'], frame)
-        cv2.imshow(window_params['detection_window_name'], bitwise_AND)
+        cv2.imshow(window_params['detection_window_name'], output_frame)
 
         # The program finishes if the key 'q' is pressed
         key = cv2.waitKey(5)
         if key == ord('q') or key == 27:
-            print("Programm finished!")
+            print("Program finished!")
             break
 
 
